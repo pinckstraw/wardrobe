@@ -13,21 +13,6 @@ from google import genai
 # ═══════════════════════════════════════════════════════
 st.set_page_config(page_title="🎀 數位衣櫥", page_icon="", layout="centered")
 
-# 用 st.html 直接注入到主頁面（不會被包進 iframe）
-st.html("""
-<script>
-(function() {
-    var v = parent.document.querySelector('meta[name="viewport"]');
-    if (!v) {
-        v = parent.document.createElement('meta');
-        v.name = 'viewport';
-        parent.document.head.appendChild(v);
-    }
-    v.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0';
-})();
-</script>
-""")
-
 HOT   = "#FE81D4"
 MID   = "#FAACBF"
 BLUSH = "#FBC3C1"
