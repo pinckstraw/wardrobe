@@ -1058,7 +1058,12 @@ elif page == "upload":
             # 處理新上傳
             if uploaded is not None:
                 from PIL import ImageOps
-                raw_img = ImageOps.exif_transpose(Image.open(uploaded))
+                # 🌟 核心修復：強制把圖片先讀進獨立的記憶體，防止 Streamlit 過河拆橋！
+                bytes_data = uploaded.getvalue()
+                img = Image.open(BytesIO(bytes_data))
+                img.load() # 強制解碼，徹底斷開與上傳元件的連結
+            
+                raw_img = ImageOps.exif_transpose(img)
                 st.session_state.orig_img = raw_img
                 st.session_state.crop_input = shrink_for_speed(raw_img, 500)
                 st.session_state.saved_img_id = uploaded.file_id
