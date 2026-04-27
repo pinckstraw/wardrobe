@@ -1,0 +1,8 @@
+streamlit
+rembg
+pillow
+opencv-python-headless
+numpy
+google-genai
+streamlit-cropper
+streamlit-image-coordinates

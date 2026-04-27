@@ -1,0 +1,10 @@
+# 忽略衣服照片
+my_wardrobe/
+
+# 忽略 Python 暫存檔
+__pycache__/
+*.pyc
+
+# 忽略環境變數或私密資訊
+.env
+settings.json
