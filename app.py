@@ -1,5 +1,5 @@
 import streamlit as st
-from rembg import remove, new_session
+#from rembg import remove, new_session
 from PIL import Image
 import cv2
 import numpy as np
@@ -327,15 +327,6 @@ div[data-testid="column"]{{padding:0 3px!important}}
 ::-webkit-scrollbar{{width:4px}}
 ::-webkit-scrollbar-thumb{{background:{MID};border-radius:10px}}
 
-/* 🌟 殘影消除魔法：當元素進入「準備汰換的舊狀態 (stale)」時，瞬間隱藏且不佔空間！ */
-[data-stale="true"] {{
-    display: none !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-}}
 </style>
 """, unsafe_allow_html=True)
 
