@@ -365,8 +365,13 @@ def get_drive_service():
 drive_service = get_drive_service()
 
 def get_drive_file_id(name):
+    # 🌟 修改點：加入 supportsAllDrives=True
     q = f"'{FOLDER_ID}' in parents and name='{name}' and trashed=false"
-    res = drive_service.files().list(q=q, fields="files(id)").execute()
+    res = drive_service.files().list(
+        q=q, fields="files(id)", 
+        supportsAllDrives=True, 
+        includeItemsFromAllDrives=True
+    ).execute()
     files = res.get('files', [])
     return files[0]['id'] if files else None
 
@@ -386,10 +391,16 @@ def save_json(name, data):
     json_bytes = json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
     media = MediaIoBaseUpload(BytesIO(json_bytes), mimetype='application/json', resumable=True)
     if fid:
-        drive_service.files().update(fileId=fid, media_body=media).execute()
+        # 🌟 修改點：update 加入 supportsAllDrives
+        drive_service.files().update(
+            fileId=fid, media_body=media, supportsAllDrives=True
+        ).execute()
     else:
         meta = {'name': name, 'parents': [FOLDER_ID]}
-        drive_service.files().create(body=meta, media_body=media).execute()
+        # 🌟 修改點：create 加入 supportsAllDrives
+        drive_service.files().create(
+            body=meta, media_body=media, supportsAllDrives=True
+        ).execute()
 
 # 🌟 雲端快取機制：確保網頁秒速重載，不會一直呼叫雲端導致卡頓
 def load_meta():
@@ -547,13 +558,20 @@ def upload_img_to_drive(img: Image.Image, fname: str):
     img.save(buf, format="PNG")
     media = MediaIoBaseUpload(BytesIO(buf.getvalue()), mimetype='image/png', resumable=True)
     meta = {'name': fname, 'parents': [FOLDER_ID]}
-    drive_service.files().create(body=meta, media_body=media).execute()
+    # 🌟 修改點：create 加入 supportsAllDrives
+    drive_service.files().create(
+        body=meta, media_body=media, supportsAllDrives=True
+    ).execute()
     if "img_cache" not in st.session_state: st.session_state.img_cache = {}
     st.session_state.img_cache[fname] = to_b64(img, 300)
 
 def delete_img_from_drive(fname: str):
     fid = get_drive_file_id(fname)
-    if fid: drive_service.files().update(fileId=fid, body={'trashed': True}).execute()
+    if fid: 
+        # 🌟 修改點：update 加入 supportsAllDrives
+        drive_service.files().update(
+            fileId=fid, body={'trashed': True}, supportsAllDrives=True
+        ).execute()
     if "img_cache" in st.session_state and fname in st.session_state.img_cache:
         del st.session_state.img_cache[fname]
 
