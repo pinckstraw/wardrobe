@@ -331,29 +331,75 @@ div[data-testid="column"]{{padding:0 3px!important}}
 """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════
-# 資料管理
+# ☁️ 資料管理 (Google Drive 雲端引擎)
 # ═══════════════════════════════════════════════════════
-BASE      = "my_wardrobe"
-META_F    = os.path.join(BASE, "metadata.json")
-CAT_F     = os.path.join(BASE, "categories.json")
-SETTING_F = os.path.join(BASE, "settings.json")
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
+from io import BytesIO
+
+BASE = "my_wardrobe"
 os.makedirs(BASE, exist_ok=True)
+FOLDER_ID = "18DMJqPraV58GdQs-b75D0I1tL03e69RM"
 
-def load_json(path, default):
-    if os.path.exists(path):
-        try: return json.load(open(path, 'r', encoding='utf-8'))
-        except: pass
-    return default
+@st.cache_resource
+def get_drive_service():
+    info = st.secrets["google_credentials"]
+    creds = service_account.Credentials.from_service_account_info(
+        info, scopes=['https://www.googleapis.com/auth/drive']
+    )
+    return build('drive', 'v3', credentials=creds)
 
-def save_json(path, data):
-    json.dump(data, open(path, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+drive_service = get_drive_service()
 
-def load_meta():      return load_json(META_F, {})
-def save_meta(d):     save_json(META_F, d)
-def load_cats():      return load_json(CAT_F, {})
-def save_cats(d):     save_json(CAT_F, d)
-def load_settings():  return load_json(SETTING_F, {"gemini_key": ""})
-def save_settings(d): save_json(SETTING_F, d)
+def get_drive_file_id(name):
+    q = f"'{FOLDER_ID}' in parents and name='{name}' and trashed=false"
+    res = drive_service.files().list(q=q, fields="files(id)").execute()
+    files = res.get('files', [])
+    return files[0]['id'] if files else None
+
+def load_json(name, default):
+    fid = get_drive_file_id(name)
+    if not fid: return default
+    req = drive_service.files().get_media(fileId=fid)
+    fh = BytesIO()
+    downloader = MediaIoBaseDownload(fh, req)
+    done = False
+    while not done: _, done = downloader.next_chunk()
+    try: return json.loads(fh.getvalue().decode('utf-8'))
+    except: return default
+
+def save_json(name, data):
+    fid = get_drive_file_id(name)
+    json_bytes = json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
+    media = MediaIoBaseUpload(BytesIO(json_bytes), mimetype='application/json', resumable=True)
+    if fid:
+        drive_service.files().update(fileId=fid, media_body=media).execute()
+    else:
+        meta = {'name': name, 'parents': [FOLDER_ID]}
+        drive_service.files().create(body=meta, media_body=media).execute()
+
+# 🌟 雲端快取機制：確保網頁秒速重載，不會一直呼叫雲端導致卡頓
+def load_meta():
+    if "meta_cache" not in st.session_state:
+        st.session_state.meta_cache = load_json("metadata.json", {})
+    return st.session_state.meta_cache
+
+def save_meta(d):
+    st.session_state.meta_cache = d
+    save_json("metadata.json", d)
+
+def load_cats():
+    if "cats_cache" not in st.session_state:
+        st.session_state.cats_cache = load_json("categories.json", {})
+    return st.session_state.cats_cache
+
+def save_cats(d):
+    st.session_state.cats_cache = d
+    save_json("categories.json", d)
+
+def load_settings():  return {"gemini_key": st.secrets.get("gemini_key", "")}
+def save_settings(d): pass # API Key 改放 Secrets，不需要存檔了
 
 @st.cache_resource
 def get_rembg_session():
