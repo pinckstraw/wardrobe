@@ -347,10 +347,16 @@ def get_drive_service():
     import json
     info = st.secrets["google_credentials"]
     
-    # 🌟 翻譯魔法：如果 Streamlit 把設定檔當成純文字，我們就幫它轉回字典！
+    # 🌟 翻譯魔法：加上 strict=False 讓翻譯機忽略那些隱形的排版符號！
     if isinstance(info, str):
-        info = json.loads(info)
-        
+        # 如果一般的寬容模式還是會報錯，我們就在解析前先幫它過濾掉不合法的換行
+        try:
+            info = json.loads(info, strict=False)
+        except json.decoder.JSONDecodeError:
+            # 備用清除魔法：處理複製貼上時多出來的實體換行
+            clean_info = info.replace('\r\n', '\\n').replace('\n', '\\n')
+            info = json.loads(clean_info, strict=False)
+            
     creds = service_account.Credentials.from_service_account_info(
         info, scopes=['https://www.googleapis.com/auth/drive']
     )
