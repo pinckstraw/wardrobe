@@ -381,6 +381,20 @@ def save_settings(d): save_json(SETTING_F, d)
 
 @st.cache_resource
 def get_rembg_session():
+    import urllib.request
+    # 指定模型檔案就在現在的資料夾裡
+    model_path = os.path.join(os.getcwd(), "isnet-general-use.onnx")
+    
+    # 萬一檔案不見了，才啟動備用下載機制
+    if not os.path.exists(model_path):
+        url = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx"
+        try:
+            urllib.request.urlretrieve(url, model_path)
+        except:
+            pass
+            
+    # 告訴 rembg 直接在這裡找模型，不要去網路抓！
+    os.environ["U2NET_HOME"] = os.getcwd() 
     return new_session("isnet-general-use")
 rb_session = get_rembg_session()
 
