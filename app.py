@@ -381,7 +381,6 @@ def get_rembg_session():
     # 告訴 rembg 直接在這裡找模型，不要去網路抓！
     os.environ["U2NET_HOME"] = os.getcwd() 
     return new_session("isnet-general-use")
-rb_session = get_rembg_session()
 
 # ═══════════════════════════════════════════════════════
 # 安全改名（修正 Windows 檔案鎖問題）
@@ -447,7 +446,9 @@ def fix_orientation(img: Image.Image) -> Image.Image:
 
 def remove_bg(img: Image.Image) -> np.ndarray:
     """去背，回傳 RGBA numpy array。注意：呼叫前要先 fix_orientation"""
-    no_bg = remove(img, session=rb_session)
+    # 🌟 只有在真正按下「去背」按鈕時，才把去背大師叫醒！
+    session = get_rembg_session() 
+    no_bg = remove(img, session=session)
     return np.array(no_bg.convert("RGBA"))
 
 def shrink_for_speed(img: Image.Image, max_side: int = 1024) -> Image.Image:
