@@ -520,16 +520,42 @@ def to_b64(img: Image.Image, size: int = None) -> str:
     buf = BytesIO(); img.save(buf, format="PNG")
     return base64.b64encode(buf.getvalue()).decode()
 
-@st.cache_data(show_spinner=False)
-def load_img_b64_cached(path: str, mtime: float, size: int = None) -> str:
-    try: return to_b64(Image.open(path), size)
+# 🌟 雲端圖片引擎：從 Google Drive 讀取、上傳與刪除
+def load_img_b64(fname: str, size: int = 300) -> str:
+    fname = os.path.basename(fname) # 防呆：如果傳進來的是路徑，只取檔名
+    if "img_cache" not in st.session_state: st.session_state.img_cache = {}
+    if fname in st.session_state.img_cache: return st.session_state.img_cache[fname]
+    
+    fid = get_drive_file_id(fname)
+    if not fid: return ""
+    
+    req = drive_service.files().get_media(fileId=fid)
+    fh = BytesIO()
+    downloader = MediaIoBaseDownload(fh, req)
+    done = False
+    while not done: _, done = downloader.next_chunk()
+    
+    try:
+        img = Image.open(fh)
+        b64 = to_b64(img, size)
+        st.session_state.img_cache[fname] = b64
+        return b64
     except: return ""
 
-def load_img_b64(path: str, size: int = 300) -> str:
-    # 預設套用 300px 縮圖尺寸，兼顧畫質與極致流暢的載入速度
-    try:
-        return load_img_b64_cached(path, os.path.getmtime(path), size)
-    except: return ""
+def upload_img_to_drive(img: Image.Image, fname: str):
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    media = MediaIoBaseUpload(BytesIO(buf.getvalue()), mimetype='image/png', resumable=True)
+    meta = {'name': fname, 'parents': [FOLDER_ID]}
+    drive_service.files().create(body=meta, media_body=media).execute()
+    if "img_cache" not in st.session_state: st.session_state.img_cache = {}
+    st.session_state.img_cache[fname] = to_b64(img, 300)
+
+def delete_img_from_drive(fname: str):
+    fid = get_drive_file_id(fname)
+    if fid: drive_service.files().update(fileId=fid, body={'trashed': True}).execute()
+    if "img_cache" in st.session_state and fname in st.session_state.img_cache:
+        del st.session_state.img_cache[fname]
 
 # ═══════════════════════════════════════════════════════
 # Gemini AI 推薦
@@ -1210,10 +1236,8 @@ elif page == "upload":
                             fname = f"item_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
                             fpath = os.path.join(BASE, sel_cat, fname)
                             
-                            # 🌟 防呆魔法：儲存前先檢查，如果沒有該分類資料夾就自動建立一個！
-                            os.makedirs(os.path.dirname(fpath), exist_ok=True)
-                            
-                            sticker_img.save(fpath)
+                            # 🌟 雲端魔法：直接上傳到 Google Drive
+                            upload_img_to_drive(sticker_img, fname)
                             m = load_meta()
                             # 🌟 寫入 metadata
                             m[fname] = {
@@ -1394,12 +1418,7 @@ elif page == "closet":
                             meta[fname]["season"]   = e_season
                             meta[fname]["occasions"]= e_occs
                             save_meta(meta)
-                            # 如果分類改了，把檔案移到新資料夾
-                            if e_cat != cur_cat_for_item:
-                                new_path = os.path.join(BASE, e_cat, fname)
-                                os.makedirs(os.path.join(BASE, e_cat), exist_ok=True)
-                                shutil.copy2(fpath, new_path)
-                                os.remove(fpath)
+                            # 🌟 雲端版：所有照片都在同一個大倉庫，所以改分類不用搬檔案了！只要 metadata 有更新就好。
                             # 更新類別的欄位/層級設定
                             cats_data = load_cats()
                             cats_data[e_cat]["col"]   = COL_KEY[e_col]
@@ -1456,7 +1475,7 @@ elif page == "closet":
                             st.rerun()
                     with c4:
                         if st.button("🗑️", key=f"del_{fname}", use_container_width=True):
-                            os.remove(fpath)
+                            delete_img_from_drive(fname)
                             if fname in meta:
                                 del meta[fname]; save_meta(meta)
                             st.session_state.toast_msg = "已移除 🌸"
