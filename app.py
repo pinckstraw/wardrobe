@@ -344,7 +344,13 @@ FOLDER_ID = "18DMJqPraV58GdQs-b75D0I1tL03e69RM"
 
 @st.cache_resource
 def get_drive_service():
+    import json
     info = st.secrets["google_credentials"]
+    
+    # 🌟 翻譯魔法：如果 Streamlit 把設定檔當成純文字，我們就幫它轉回字典！
+    if isinstance(info, str):
+        info = json.loads(info)
+        
     creds = service_account.Credentials.from_service_account_info(
         info, scopes=['https://www.googleapis.com/auth/drive']
     )
