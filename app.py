@@ -774,45 +774,47 @@ if page == "wardrobe":
                             cp = os.path.join(BASE, cat_n)
                             if not os.path.exists(cp):
                                 continue
+                            
                             for fn in os.listdir(cp):
-                                    if not fn.endswith(".png"): continue
-                                    m = meta.get(fn, {})
-                                    
-                                    # ⛅ 季節篩選
-                                    if st.session_state.filter_season != "四季皆宜":
-                                        if m.get("season","") not in (st.session_state.filter_season,"四季皆宜"):
-                                            continue
-                                            
-                                    # 📍 場合篩選
-                                    if st.session_state.filter_occ:
-                                        if not any(o in m.get("occasions",[]) for o in st.session_state.filter_occ):
-                                            continue
-                                            
-                                    # 🎨 顏色篩選 (🌟 這是我們新加的魔法！)
-                                    if st.session_state.filter_color:
-                                        if m.get("color", "") not in st.session_state.filter_color:
-                                            continue
-                                            
-                                    # 📦 打包裝箱給 AI (🌟 順便把顏色標籤也附上去)
-                                    wlist.append({
-                                        "fname": fn,
-                                        "category": cat_n,
-                                        "name": m.get("name", fn),
-                                        "season": m.get("season", ""),
-                                        "occasions": m.get("occasions", []),
-                                        "color": m.get("color", "") 
-                                    })
+                                if not fn.endswith(".png"): continue
+                                m = meta.get(fn, {})
+                                
+                                # ⛅ 季節篩選
+                                if st.session_state.filter_season != "四季皆宜":
+                                    if m.get("season","") not in (st.session_state.filter_season,"四季皆宜"):
+                                        continue
+                                        
+                                # 📍 場合篩選
+                                if st.session_state.filter_occ:
+                                    if not any(o in m.get("occasions",[]) for o in st.session_state.filter_occ):
+                                        continue
+                                        
+                                # 🎨 顏色篩選 (支援多選)
+                                if st.session_state.filter_color:
+                                    if m.get("color", "") not in st.session_state.filter_color:
+                                        continue
+                                        
+                                # 📦 打包裝箱給 AI
+                                wlist.append({
+                                    "fname": fn,
+                                    "category": cat_n,
+                                    "name": m.get("name", fn),
+                                    "season": m.get("season", ""),
+                                    "occasions": m.get("occasions", []),
+                                    "color": m.get("color", "") 
+                                })
 
                         # 🌟 核心防呆：如果經過上面的篩選後衣櫃是空的，就在這裡攔截！
                         if not wlist:
-                            st.warning("🧐 哎呀！衣櫃裡目前沒有符合目前篩選條件（季節/場合）的衣物，AI 沒辦法幫你搭配喔！請先去上傳衣服，或是把篩選條件調鬆一點。")
+                            st.warning("🧐 哎呀！衣櫃裡目前沒有符合條件的衣物，AI 沒辦法幫你搭配喔！")
                         else:
                             if sel_exists:
                                 selected_for_ai = {**s_info, "category": s_cat}
                             else:
                                 selected_for_ai = {"name": "（未指定，請完整推薦）", "category": "未指定",
                                                    "season": st.session_state.filter_season,
-                                                   "occasions": st.session_state.filter_occ}
+                                                   "occasions": st.session_state.filter_occ,
+                                                   "color": st.session_state.filter_color}
 
                             with st.spinner("✨ AI 分析搭配中..."):
                                 result = get_gemini_recommendation(
