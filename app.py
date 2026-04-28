@@ -1351,45 +1351,47 @@ elif page == "closet":
                         cur_col_key = cats.get(cur_cat_for_item, {}).get("col", "L")
                         cur_lvl_key = cats.get(cur_cat_for_item, {}).get("level", 2)
 
+                        # 🌟 標籤移到上方，並調整 margin 讓排版更漂亮
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:0 0 4px">👗 名稱</div>', unsafe_allow_html=True)
                         e_name   = st.text_input("名稱", value=info.get("name",""),
                                                   key=f"e_name_{fname}", label_visibility="collapsed",
                                                   placeholder="衣物名稱")
-                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">👗 名稱</div>', unsafe_allow_html=True)
 
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">📁 分類</div>', unsafe_allow_html=True)
                         e_cat    = st.selectbox("分類", cat_names,
                                                  index=cat_names.index(cur_cat_for_item)
                                                  if cur_cat_for_item in cat_names else 0,
                                                  key=f"e_cat_{fname}", label_visibility="collapsed")
-                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">📁 分類</div>', unsafe_allow_html=True)
 
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">⛅ 季節</div>', unsafe_allow_html=True)
                         e_season = st.selectbox("季節", SEASONS,
                                                  index=SEASONS.index(info.get("season", SEASONS[0]))
                                                  if info.get("season") in SEASONS else 0,
                                                  key=f"e_season_{fname}", label_visibility="collapsed")
-                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">⛅ 季節</div>', unsafe_allow_html=True)
 
-                        # 🌟 這裡是新加的顏色編輯欄位！
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">🎨 顏色</div>', unsafe_allow_html=True)
                         e_color  = st.text_input("顏色", value=info.get("color", ""),
                                                   key=f"e_color_{fname}", label_visibility="collapsed",
                                                   placeholder="例如：白、藍、粉紅...")
-                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">🎨 顏色</div>', unsafe_allow_html=True)
 
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">📍 場合</div>', unsafe_allow_html=True)
                         e_occs   = st.multiselect("場合", OCCASIONS,
                                                    default=[o for o in occs if o in OCCASIONS],
                                                    key=f"e_occs_{fname}", label_visibility="collapsed")
-                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">📍 場合</div>', unsafe_allow_html=True)
 
-                        # 版位設定
+                        # 🌟 把原本的版位設定標籤也移到上方
                         COL_VALS = list(COL_KEY.keys())
                         LVL_VALS = list(LVL_KEY.keys())
                         col_idx  = next((i for i,k in enumerate(COL_VALS) if COL_KEY[k]==cur_col_key), 0)
                         lvl_idx  = next((i for i,k in enumerate(LVL_VALS) if LVL_KEY[k]==cur_lvl_key), 1)
+                        
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">👈👉 欄位位置</div>', unsafe_allow_html=True)
                         e_col    = st.selectbox("欄位", COL_VALS, index=col_idx,
                                                  key=f"e_col_{fname}", label_visibility="collapsed")
-                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">👈👉 欄位位置</div>', unsafe_allow_html=True)
+                        
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">⬆️⬇️ 上中下層</div>', unsafe_allow_html=True)
                         e_lvl    = st.selectbox("層級", LVL_VALS, index=lvl_idx,
                                                  key=f"e_lvl_{fname}", label_visibility="collapsed")
-                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 8px">⬆️⬇️ 上中下層</div>', unsafe_allow_html=True)
 
                     sv_col, ca_col = st.columns(2)
                     with sv_col:
@@ -1438,7 +1440,6 @@ elif page == "closet":
                         except: pass
                     with c2:
                         occ_badges = "".join(f'<span class="badge b-mid">{o}</span>' for o in occs)
-                        # 🌟 4. 同樣確保全部視角下讀到正確分類
                         cur_cat_info = cats.get(info.get("category", f_cat), {})
                         col_label = "左欄" if cur_cat_info.get("col","L")=="L" else "右欄"
                         lvl_map   = {1:"上層", 2:"中層", 3:"下層"}
@@ -1449,7 +1450,7 @@ elif page == "closet":
                             {info.get('name', fname[:16])}
                           </div>
                           <span class="badge b-hot">⛅ {info.get('season','-')}</span>
-                          <span class="badge b-blush">{col_label} {lvl_label}</span>
+                          <span class="badge b-cream">🎨 {info.get('color','未標示')}</span>  <span class="badge b-blush">{col_label} {lvl_label}</span>
                           <br/>{occ_badges}
                         </div>""", unsafe_allow_html=True)
                     with c3:
