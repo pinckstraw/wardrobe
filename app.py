@@ -432,24 +432,33 @@ def get_rembg_session():
     import os
     from rembg import new_session
     
-    # 🌟 終極防護：換成「超輕量級」去背模型 u2netp (只要 4MB，原版要 170MB！)
     model_name = "u2netp"
     model_path = os.path.join(os.getcwd(), f"{model_name}.onnx")
+    temp_path = model_path + ".tmp"
     
+    # 🌟 防護網 1：如果檔案存在，但大小不合理 (小於 3MB，正常是 4.7MB)，代表是斷線留下的壞檔，直接刪除！
+    if os.path.exists(model_path) and os.path.getsize(model_path) < 3000000:
+        os.remove(model_path)
+        
     if not os.path.exists(model_path):
         url = f"https://github.com/danielgatis/rembg/releases/download/v0.0.0/{model_name}.onnx"
         try:
-            # 破解 SSL 阻擋魔法
+            # 破解 SSL 阻擋
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
             
-            with urllib.request.urlopen(url, context=ctx) as response, open(model_path, 'wb') as out_file:
+            # 🌟 防護網 2：先下載到「暫存檔」，全部載完才轉正。這樣就算中間斷線，也不會留下壞檔炸毀系統！
+            with urllib.request.urlopen(url, context=ctx) as response, open(temp_path, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
+            
+            os.rename(temp_path, model_path)
         except Exception as e:
             print(f"去背模型下載失敗: {e}")
-            
-    # 告訴 rembg 直接在這裡找模型，不要去網路亂抓
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                
+    # 告訴 rembg 直接在這裡找模型
     os.environ["U2NET_HOME"] = os.getcwd() 
     return new_session(model_name)
 
