@@ -698,15 +698,18 @@ if page == "wardrobe":
                 label_visibility="collapsed")
             st.session_state.filter_season = fs
 
-            # 🎨 顏色篩選
+            # 🎨 顏色篩選 (支援多選模式)
             st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">🎨 顏色</div>', unsafe_allow_html=True)
             m_temp = load_meta()
             used_colors = sorted(list(set(v.get("color") for v in m_temp.values() if v.get("color"))))
-            color_options = ["全部顏色"] + used_colors
             
-            fc = st.selectbox("顏色", color_options, key="fc",
-                index=color_options.index(st.session_state.filter_color)
-                if st.session_state.filter_color in color_options else 0,
+            # 🌟 防呆魔法：如果舊的設定還是文字（例如"全部顏色"），先把它轉換成空的列表
+            if not isinstance(st.session_state.filter_color, list):
+                st.session_state.filter_color = []
+                
+            fc = st.multiselect("顏色", used_colors, key="fc",
+                default=[c for c in st.session_state.filter_color if c in used_colors],
+                placeholder="選擇顏色（不選代表全部）",
                 label_visibility="collapsed")
             st.session_state.filter_color = fc
 
@@ -1347,9 +1350,10 @@ elif page == "closet":
                 if info.get("season", "") not in [f_season, "四季皆宜"]:
                     continue
             
-            # 🎨 顏色過濾
-            if f_color != "全部顏色":
-                if info.get("color") != f_color:
+            # 🎨 顏色過濾 (支援多選)
+            if f_color: # 如果清單不是空的（代表有選顏色）
+                item_color = info.get("color", "")
+                if item_color not in f_color:
                     continue
             
             # 📍 場合過濾
