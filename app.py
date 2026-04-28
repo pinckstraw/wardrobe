@@ -427,17 +427,24 @@ def save_settings(d): pass # API Key 改放 Secrets，不需要存檔了
 @st.cache_resource
 def get_rembg_session():
     import urllib.request
-    from rembg import new_session   # 延遲載入：只有真正用到才匯入
-    # 指定模型檔案就在現在的資料夾裡
+    import ssl
+    import shutil
+    from rembg import new_session
+    
     model_path = os.path.join(os.getcwd(), "isnet-general-use.onnx")
     
-    # 萬一檔案不見了，才啟動備用下載機制
     if not os.path.exists(model_path):
         url = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx"
         try:
-            urllib.request.urlretrieve(url, model_path)
-        except:
-            pass
+            # 🌟 破解 SSL 阻擋魔法：強制建立一個「不嚴格檢查安全憑證」的連線通道
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            
+            with urllib.request.urlopen(url, context=ctx) as response, open(model_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+        except Exception as e:
+            print(f"去背模型下載失敗: {e}")
             
     # 告訴 rembg 直接在這裡找模型，不要去網路抓！
     os.environ["U2NET_HOME"] = os.getcwd() 
