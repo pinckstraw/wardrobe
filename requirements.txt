@@ -2,10 +2,9 @@ onnxruntime-headless
 opencv-python-headless
 streamlit
 rembg
-Pillow
+pillow
 numpy
 google-genai
 streamlit-image-coordinates
 google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
+google-auth
