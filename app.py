@@ -1,5 +1,5 @@
 import streamlit as st
-#from rembg import remove, new_session
+from rembg import remove, new_session
 from PIL import Image
 import cv2
 import numpy as np
