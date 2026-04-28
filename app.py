@@ -1,5 +1,5 @@
 import streamlit as st
-from rembg import remove, new_session
+# from rembg import remove, new_session   # 改成延遲載入
 from PIL import Image
 import cv2
 import numpy as np
@@ -427,6 +427,7 @@ def save_settings(d): pass # API Key 改放 Secrets，不需要存檔了
 @st.cache_resource
 def get_rembg_session():
     import urllib.request
+    from rembg import new_session   # 延遲載入：只有真正用到才匯入
     # 指定模型檔案就在現在的資料夾裡
     model_path = os.path.join(os.getcwd(), "isnet-general-use.onnx")
     
@@ -506,7 +507,7 @@ def fix_orientation(img: Image.Image) -> Image.Image:
 
 def remove_bg(img: Image.Image) -> np.ndarray:
     """去背，回傳 RGBA numpy array。注意：呼叫前要先 fix_orientation"""
-    # 🌟 只有在真正按下「去背」按鈕時，才把去背大師叫醒！
+    from rembg import remove   # 延遲載入
     session = get_rembg_session() 
     no_bg = remove(img, session=session)
     return np.array(no_bg.convert("RGBA"))
