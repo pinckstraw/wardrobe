@@ -780,40 +780,36 @@ if page == "wardrobe":
                     if st.button("✨ AI 幫我搭配整套造型！", key="do_rec", use_container_width=True):
                         wlist = []
                         exclude_cat = s_cat if sel_exists else None
-                        for cat_n in cat_names:
+                        # 🌟 修正：直接從雲端名冊 meta 遍歷所有衣服，不再翻找本機資料夾
+                        for fn, m in meta.items():
+                            cat_n = m.get("category", "")
                             if cat_n == exclude_cat: continue
-                            cp = os.path.join(BASE, cat_n)
-                            if not os.path.exists(cp):
-                                continue
+                            if cat_n not in cat_names: continue
                             
-                            for fn in os.listdir(cp):
-                                if not fn.endswith(".png"): continue
-                                m = meta.get(fn, {})
-                                
-                                # ⛅ 季節篩選
-                                if st.session_state.filter_season != "四季皆宜":
-                                    if m.get("season","") not in (st.session_state.filter_season,"四季皆宜"):
-                                        continue
-                                        
-                                # 📍 場合篩選
-                                if st.session_state.filter_occ:
-                                    if not any(o in m.get("occasions",[]) for o in st.session_state.filter_occ):
-                                        continue
-                                        
-                                # 🎨 顏色篩選 (支援多選)
-                                if st.session_state.filter_color:
-                                    if m.get("color", "") not in st.session_state.filter_color:
-                                        continue
-                                        
-                                # 📦 打包裝箱給 AI
-                                wlist.append({
-                                    "fname": fn,
-                                    "category": cat_n,
-                                    "name": m.get("name", fn),
-                                    "season": m.get("season", ""),
-                                    "occasions": m.get("occasions", []),
-                                    "color": m.get("color", "") 
-                                })
+                            # ⛅ 季節篩選
+                            if st.session_state.filter_season != "四季皆宜":
+                                if m.get("season","") not in (st.session_state.filter_season,"四季皆宜"):
+                                    continue
+                                    
+                            # 📍 場合篩選
+                            if st.session_state.filter_occ:
+                                if not any(o in m.get("occasions",[]) for o in st.session_state.filter_occ):
+                                    continue
+                                    
+                            # 🎨 顏色篩選 (支援多選)
+                            if st.session_state.filter_color:
+                                if m.get("color", "") not in st.session_state.filter_color:
+                                    continue
+                                    
+                            # 📦 打包裝箱給 AI
+                            wlist.append({
+                                "fname": fn,
+                                "category": cat_n,
+                                "name": m.get("name", fn),
+                                "season": m.get("season", ""),
+                                "occasions": m.get("occasions", []),
+                                "color": m.get("color", "") 
+                            })
 
                         # 🌟 核心防呆：如果經過上面的篩選後衣櫃是空的，就在這裡攔截！
                         if not wlist:
@@ -1372,6 +1368,12 @@ elif page == "closet":
                                                  key=f"e_season_{fname}", label_visibility="collapsed")
                         st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">⛅ 季節</div>', unsafe_allow_html=True)
 
+                        # 🌟 這裡是新加的顏色編輯欄位！
+                        e_color  = st.text_input("顏色", value=info.get("color", ""),
+                                                  key=f"e_color_{fname}", label_visibility="collapsed",
+                                                  placeholder="例如：白、藍、粉紅...")
+                        st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:-6px 0 4px">🎨 顏色</div>', unsafe_allow_html=True)
+
                         e_occs   = st.multiselect("場合", OCCASIONS,
                                                    default=[o for o in occs if o in OCCASIONS],
                                                    key=f"e_occs_{fname}", label_visibility="collapsed")
@@ -1396,6 +1398,7 @@ elif page == "closet":
                             meta[fname]["name"]     = e_name
                             meta[fname]["category"] = e_cat
                             meta[fname]["season"]   = e_season
+                            meta[fname]["color"]    = e_color
                             meta[fname]["occasions"]= e_occs
                             save_meta(meta)
                             # 🌟 雲端版：所有照片都在同一個大倉庫，所以改分類不用搬檔案了！只要 metadata 有更新就好。
