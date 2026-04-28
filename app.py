@@ -1286,19 +1286,13 @@ elif page == "closet":
         f_color  = st.session_state.filter_color
         f_occs   = st.session_state.filter_occ
 
-        # 取得原始清單
+        # 🌟 取得原始清單 (直接從雲端名冊 metadata 抓取！)
         raw_files = []
-        if view_cat == "✨ 全部衣物":
-            for c in cat_names:
-                c_path = os.path.join(BASE, c)
-                if os.path.exists(c_path):
-                    for f in os.listdir(c_path):
-                        if f.endswith(".png"): raw_files.append((c, f))
-        else:
-            c_path = os.path.join(BASE, view_cat)
-            if os.path.exists(c_path):
-                for f in os.listdir(c_path):
-                    if f.endswith(".png"): raw_files.append((view_cat, f))
+        for fname, info in meta.items():
+            f_cat = info.get("category", "")
+            if f_cat in cat_names:
+                if view_cat == "✨ 全部衣物" or f_cat == view_cat:
+                    raw_files.append((f_cat, fname))
 
         # 進行深度過濾
         for f_cat, fname in raw_files:
