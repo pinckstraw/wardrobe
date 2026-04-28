@@ -775,18 +775,33 @@ if page == "wardrobe":
                             if not os.path.exists(cp):
                                 continue
                             for fn in os.listdir(cp):
-                                if not fn.endswith(".png"): continue
-                                m = meta.get(fn, {})
-                                # 季節篩選
-                                if st.session_state.filter_season != "四季皆宜":
-                                    if m.get("season","") not in (st.session_state.filter_season,"四季皆宜"):
-                                        continue
-                                # 場合篩選
-                                if st.session_state.filter_occ:
-                                    if not any(o in m.get("occasions",[]) for o in st.session_state.filter_occ):
-                                        continue
-                                wlist.append({"fname":fn,"category":cat_n,"name":m.get("name",fn),
-                                              "season":m.get("season",""),"occasions":m.get("occasions",[])})
+                                    if not fn.endswith(".png"): continue
+                                    m = meta.get(fn, {})
+                                    
+                                    # ⛅ 季節篩選
+                                    if st.session_state.filter_season != "四季皆宜":
+                                        if m.get("season","") not in (st.session_state.filter_season,"四季皆宜"):
+                                            continue
+                                            
+                                    # 📍 場合篩選
+                                    if st.session_state.filter_occ:
+                                        if not any(o in m.get("occasions",[]) for o in st.session_state.filter_occ):
+                                            continue
+                                            
+                                    # 🎨 顏色篩選 (🌟 這是我們新加的魔法！)
+                                    if st.session_state.filter_color:
+                                        if m.get("color", "") not in st.session_state.filter_color:
+                                            continue
+                                            
+                                    # 📦 打包裝箱給 AI (🌟 順便把顏色標籤也附上去)
+                                    wlist.append({
+                                        "fname": fn,
+                                        "category": cat_n,
+                                        "name": m.get("name", fn),
+                                        "season": m.get("season", ""),
+                                        "occasions": m.get("occasions", []),
+                                        "color": m.get("color", "") 
+                                    })
 
                         # 🌟 核心防呆：如果經過上面的篩選後衣櫃是空的，就在這裡攔截！
                         if not wlist:
