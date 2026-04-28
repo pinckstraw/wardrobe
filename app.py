@@ -1001,23 +1001,15 @@ if page == "wardrobe":
 
             act_cat = st.session_state.sel_cat
 
-            # 🌟 2. 獲取檔案清單（優化：建立 (類別, 檔名) 的配對清單）
+            # 🌟 2. 獲取檔案清單（直接從雲端名冊讀取，不再翻找本機空資料夾！）
             files_to_show = []
-            if act_cat == "✨ 全部衣物":
-                # 選全部時，掃描所有分類資料夾
-                for c in cat_names:
-                    c_path = os.path.join(BASE, c)
-                    if os.path.exists(c_path):
-                        for f in os.listdir(c_path):
-                            if f.endswith(".png"):
-                                files_to_show.append((c, f))
-            else:
-                # 選單一分類時，只掃描該資料夾
-                c_path = os.path.join(BASE, act_cat)
-                if os.path.exists(c_path):
-                    for f in os.listdir(c_path):
-                        if f.endswith(".png"):
-                            files_to_show.append((act_cat, f))
+            for fname, info in meta.items():
+                f_cat = info.get("category", "")
+                # 確保衣服的分類有存在
+                if f_cat in cat_names:
+                    # 如果選了「全部」，或是剛好符合目前選的分類，就秀出來
+                    if act_cat == "✨ 全部衣物" or f_cat == act_cat:
+                        files_to_show.append((f_cat, fname))
             
             # 按檔案名稱排序（新產生的 item_... 檔名會排在前面）
             files_to_show.sort(key=lambda x: x[1], reverse=True)
@@ -1077,7 +1069,7 @@ elif page == "upload":
     else:
         step = st.session_state.upload_step
 
-        # ── STEP 1：上傳照片 → 裁切 → 去背 ──
+        # ── STEP 1：上傳照片 → 去背（已移除裁切框） ──
         if step == "upload":
             st.markdown('<div class="sec-title">📸 上傳衣服照片</div>', unsafe_allow_html=True)
 
@@ -1089,109 +1081,35 @@ elif page == "upload":
             # 處理新上傳
             if uploaded is not None:
                 from PIL import ImageOps
-                # 🌟 核心修復：強制把圖片先讀進獨立的記憶體，防止 Streamlit 過河拆橋！
                 bytes_data = uploaded.getvalue()
                 img = Image.open(BytesIO(bytes_data))
                 img.load() # 強制解碼，徹底斷開與上傳元件的連結
             
                 raw_img = ImageOps.exif_transpose(img)
                 st.session_state.orig_img = raw_img
-                st.session_state.crop_input = shrink_for_speed(raw_img, 500)
                 st.session_state.saved_img_id = uploaded.file_id
-                st.session_state["crop_pts"] = []
                 st.rerun()
             
-            # 如果有暫存照片，顯示裁切介面
+            # 如果有暫存照片，直接顯示並提供去背按鈕
             if "saved_img_id" in st.session_state:
-                from PIL import ImageDraw
-                from streamlit_image_coordinates import streamlit_image_coordinates
+                orig_img = st.session_state.orig_img
                 
-                orig_img   = st.session_state.orig_img
-                crop_input = st.session_state.crop_input
-                
-                # 重新上傳按鈕（放最上面）
+                # 重新上傳按鈕
                 if st.button("🔄 重新上傳照片", key="reupload", use_container_width=True):
-                    for k in ["saved_img_id", "orig_img", "crop_input", "crop_pts"]:
+                    for k in ["saved_img_id", "orig_img"]:
                         if k in st.session_state: del st.session_state[k]
                     st.rerun()
                 
-                use_crop = st.checkbox("✂️ 使用裁切框", value=True, key="use_crop")
-                
-                if use_crop:
-                    st.markdown(f'<div style="color:{MID};font-size:13px;font-weight:900;margin:4px 0 6px">✂️ 在照片上點兩下：第一下=左上角，第二下=右下角</div>', unsafe_allow_html=True)
-                    
-                    if "crop_pts" not in st.session_state:
-                        st.session_state["crop_pts"] = []
-                    pts = st.session_state["crop_pts"]
-                    
-                    # 畫已點的標記和矩形
-                    preview = crop_input.copy()
-                    draw = ImageDraw.Draw(preview)
-                    for p in pts:
-                        x, y = p['x'], p['y']
-                        draw.ellipse([x-8, y-8, x+8, y+8], outline='#FE81D4', width=3)
-                        draw.line([x-12, y, x+12, y], fill='#FE81D4', width=2)
-                        draw.line([x, y-12, x, y+12], fill='#FE81D4', width=2)
-                    if len(pts) == 2:
-                        x1, y1 = pts[0]['x'], pts[0]['y']
-                        x2, y2 = pts[1]['x'], pts[1]['y']
-                        l, t = min(x1, x2), min(y1, y2)
-                        r, b = max(x1, x2), max(y1, y2)
-                        draw.rectangle([l, t, r, b], outline='#FE81D4', width=4)
-                    
-                    # 顯示可點擊的圖片（固定寬度避免座標誤差）
-                    DISPLAY_W = 380
-                    iw, ih = preview.size
-                    DISPLAY_H = int(ih * DISPLAY_W / iw)
-                    
-                    coords = streamlit_image_coordinates(
-                        preview,
-                        key="img_coords_main",
-                        width=DISPLAY_W,
-                        height=DISPLAY_H,
-                    )
-                    
-                    if coords is not None:
-                        scale_x = iw / DISPLAY_W
-                        scale_y = ih / DISPLAY_H
-                        new_pt = {'x': int(coords['x'] * scale_x), 'y': int(coords['y'] * scale_y)}
-                        if not pts or pts[-1] != new_pt:
-                            if len(pts) >= 2:
-                                st.session_state["crop_pts"] = [new_pt]
-                            else:
-                                st.session_state["crop_pts"].append(new_pt)
-                            st.rerun()
-                    
-                    # 狀態提示 + 重設按鈕
-                    if len(pts) == 0:
-                        st.info("👆 請點第 1 下：標記裁切框的**左上角**")
-                        final_img = crop_input
-                    elif len(pts) == 1:
-                        st.info("👆 請點第 2 下：標記裁切框的**右下角**")
-                        final_img = crop_input
-                    else:
-                        col_a, col_b = st.columns([2, 1])
-                        with col_a:
-                            st.success(f"✅ 已選範圍 {abs(pts[1]['x']-pts[0]['x'])}×{abs(pts[1]['y']-pts[0]['y'])}")
-                        with col_b:
-                            if st.button("🔄 重新選", key="reset_crop", use_container_width=True):
-                                st.session_state["crop_pts"] = []
-                                st.rerun()
-                        x1, y1 = pts[0]['x'], pts[0]['y']
-                        x2, y2 = pts[1]['x'], pts[1]['y']
-                        l, t = min(x1, x2), min(y1, y2)
-                        r, b = max(x1, x2), max(y1, y2)
-                        final_img = crop_input.crop((l, t, r, b))
-                else:
-                    st.image(orig_img, use_container_width=True)
-                    final_img = orig_img
+                # 直接顯示原圖
+                st.image(orig_img, use_container_width=True)
+                final_img = orig_img
                 
                 if st.button("✨ 確定並執行 AI 去背！", use_container_width=True):
                     with st.spinner("✨ AI 魔法去背中，請耐心稍候..."):
                         try:
                             # 🌟 廣播 1
                             st.info("⏳ 步驟 1：正在壓縮圖片...")
-                            small_img = shrink_for_speed(final_img, 320) # 降到 320 確保萬無一失
+                            small_img = shrink_for_speed(final_img, 320)
                             
                             # 🌟 廣播 2
                             st.info("⏳ 步驟 2：正在啟動輕量級去背模型...")
@@ -1206,7 +1124,8 @@ elif page == "upload":
                             st.session_state.sticker_bytes = buf.getvalue()
                             st.session_state.upload_step   = "info"
                             
-                            for k in ["saved_img_id", "orig_img", "crop_input", "crop_pts"]:
+                            # 清掉暫存
+                            for k in ["saved_img_id", "orig_img"]:
                                 if k in st.session_state: del st.session_state[k]
                             st.rerun()
                         except Exception as e:
