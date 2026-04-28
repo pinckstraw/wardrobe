@@ -1184,18 +1184,26 @@ elif page == "upload":
                     final_img = orig_img
                 
                 if st.button("✨ 確定並執行 AI 去背！", use_container_width=True):
-                    with st.spinner("✨ AI 魔法去背中，請稍候..."):
-                        small_img = shrink_for_speed(final_img, 1024)
-                        arr = remove_bg(small_img)
-                        sticker = apply_border(arr, 3)
-                    buf = BytesIO()
-                    sticker.save(buf, format="PNG")
-                    st.session_state.sticker_bytes = buf.getvalue()
-                    st.session_state.upload_step   = "info"
-                    # 清掉裁切相關暫存
-                    for k in ["saved_img_id", "orig_img", "crop_input", "crop_pts"]:
-                        if k in st.session_state: del st.session_state[k]
-                    st.rerun()
+                    # 🌟 加上詳細的提示文字
+                    with st.spinner("✨ AI 魔法去背中，第一次需要下載模型大約 1 分鐘，請耐心稍候..."):
+                        try:
+                            # 🌟 核心防暴魔法：將解析度從 1024 降到 512，大幅減少記憶體消耗，防止主機偷偷當機！
+                            small_img = shrink_for_speed(final_img, 512)
+                            arr = remove_bg(small_img)
+                            sticker = apply_border(arr, 3)
+                            
+                            buf = BytesIO()
+                            sticker.save(buf, format="PNG")
+                            st.session_state.sticker_bytes = buf.getvalue()
+                            st.session_state.upload_step   = "info"
+                            
+                            # 清掉裁切相關暫存
+                            for k in ["saved_img_id", "orig_img", "crop_input", "crop_pts"]:
+                                if k in st.session_state: del st.session_state[k]
+                            st.rerun()
+                        except Exception as e:
+                            # 🌟 抓漏警報器：如果真的有任何錯誤，強迫它顯示在畫面上！
+                            st.error(f"⛔ 去背過程發生錯誤，請把這段紅字截圖給我看：{str(e)}")
 
         # ── STEP 2：填寫衣物資訊 ──
         elif step == "info":
