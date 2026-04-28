@@ -429,14 +429,17 @@ def get_rembg_session():
     import urllib.request
     import ssl
     import shutil
+    import os
     from rembg import new_session
     
-    model_path = os.path.join(os.getcwd(), "isnet-general-use.onnx")
+    # 🌟 終極防護：換成「超輕量級」去背模型 u2netp (只要 4MB，原版要 170MB！)
+    model_name = "u2netp"
+    model_path = os.path.join(os.getcwd(), f"{model_name}.onnx")
     
     if not os.path.exists(model_path):
-        url = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx"
+        url = f"https://github.com/danielgatis/rembg/releases/download/v0.0.0/{model_name}.onnx"
         try:
-            # 🌟 破解 SSL 阻擋魔法：強制建立一個「不嚴格檢查安全憑證」的連線通道
+            # 破解 SSL 阻擋魔法
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
@@ -446,9 +449,9 @@ def get_rembg_session():
         except Exception as e:
             print(f"去背模型下載失敗: {e}")
             
-    # 告訴 rembg 直接在這裡找模型，不要去網路抓！
+    # 告訴 rembg 直接在這裡找模型，不要去網路亂抓
     os.environ["U2NET_HOME"] = os.getcwd() 
-    return new_session("isnet-general-use")
+    return new_session(model_name)
 
 # ═══════════════════════════════════════════════════════
 # 安全改名（修正 Windows 檔案鎖問題）
