@@ -970,14 +970,14 @@ if page == "wardrobe":
                                 sub_cols = st.columns(len(items))
                                 for sc, e in zip(sub_cols, items):
                                     with sc:
-                                        # 🌟 加入智能縮放邏輯
-                                        check_str = e['cat'] + e['name']
-                                        if any(k in check_str for k in ["洋裝", "連身", "長褲", "西裝褲", "褲", "大衣", "全身", "長裙"]):
-                                            img_scale = "100%" # 衣服類佔滿
-                                        elif any(k in check_str for k in ["帽", "鞋", "包", "飾", "配件", "襪", "項鍊", "耳環", "貝雷帽"]):
-                                            img_scale = "50%"  # 配件類縮小到 50%
+                                        # 🌟 專屬 8 大分類比例判定：同步穿搭畫布的顯示比例！
+                                        if e['cat'] in ["洋裝"]:
+                                            img_scale = "100%" # 全身型單品佔滿
+                                        elif e['cat'] in ["帽子", "包包", "耳環/項鍊", "鞋子"]:
+                                            img_scale = "50%"  # 配件與鞋子精緻縮小
                                         else:
-                                            img_scale = "80%"  # 其他中間比例
+                                            # 剩下的就是「上衣」、「褲子」、「裙子」
+                                            img_scale = "80%"  # 上下著使用標準比例
 
                                         # 🌟 第一步修改：直接移除原本的 st.popover 區塊，讓畫面變乾淨
                                         
