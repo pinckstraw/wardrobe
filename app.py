@@ -621,13 +621,17 @@ def get_gemini_recommendation(api_key, selected_item, wardrobe_items, season, oc
         occ_str = "、".join(occasions) if occasions else "不限"
         items_desc = "".join(f"- {it['category']}: {it['name']} ({it['fname']})\n" for it in wardrobe_items)
         
+        # 🌟 測試專用的「放水版」AI 指令！
         prompt = (
-            f"妳是深諳「最新韓國明星穿搭風格」的專業造型師。"
-            f"請參考近期韓星的私服與流行趨勢，從以下衣櫥清單中挑選單品，"
-            f"為我搭配一套最帶有韓系氛圍、時髦又有質感的造型。\n"
-            f"當前季節條件：{season} / 預定場合：{occ_str}\n\n"
+            f"妳現在是「系統測試員」。使用者的衣櫃目前只有少數幾件衣服。\n"
+            f"請妳『強迫』從以下的衣櫥清單中，挑選至少 2 件單品（例如：一件主要衣物 + 一雙鞋子）來完成搭配。\n"
+            f"完全不需要考慮季節、場合或風格是否吻合，不管搭起來奇不奇怪，只要能搭出一套讓我測試畫面就好！\n\n"
             f"衣櫥清單：\n{items_desc}\n\n"
-            f"請注意：妳的回覆必須「只能」包含 JSON 格式的資料，絕對不要輸出任何其他的說明文字。"
+            f"請注意：妳的回覆必須「只能」包含 JSON 格式，絕對不要輸出任何其他文字、也不要用 ```json 包裝。格式範例如下：\n"
+            f"{{\n"
+            f'  "分類名稱A": {{"fname": "正確的檔名.png", "reason": "測試用搭配"}},\n'
+            f'  "分類名稱B": {{"fname": "正確的檔名.png", "reason": "測試用搭配"}}\n'
+            f"}}"
         )
 
         # 🌟 核心修正：使用 gemini-1.5-flash
