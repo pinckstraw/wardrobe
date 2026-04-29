@@ -430,10 +430,10 @@ def get_rembg_session():
     import ssl
     import shutil
     import os
+    import onnxruntime as ort  # 🌟 新增：召喚底層引擎
     from rembg import new_session
     
     model_name = "u2netp"
-    # 告訴 rembg 模型就在這裡，不要去別的地方亂抓
     os.environ["U2NET_HOME"] = os.getcwd() 
     model_path = os.path.join(os.getcwd(), f"{model_name}.onnx")
     temp_path = model_path + ".tmp"
@@ -450,11 +450,9 @@ def get_rembg_session():
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
             
-            # 下載到暫存檔
             with urllib.request.urlopen(url, context=ctx) as response, open(temp_path, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
             
-            # 檢查下載的檔案有沒有完整 (大約 4.7MB)
             if os.path.getsize(temp_path) > 3000000:
                 os.rename(temp_path, model_path)
             else:
@@ -463,11 +461,15 @@ def get_rembg_session():
         except Exception as e:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-            # 🚨 終極煞車：如果下載失敗，直接在畫面上印出錯誤並「停止執行」，絕不讓 rembg 暴衝！
             st.error(f"🚨 去背模型下載失敗（網路連線異常）。請重新整理網頁再試一次！(錯誤碼: {e})")
             st.stop() 
+            
+    # 🌟 終極防爆網：限制 ONNX 引擎的執行緒，防止雲端主機記憶體錯亂崩潰！
+    sess_opts = ort.SessionOptions()
+    sess_opts.inter_op_num_threads = 1
+    sess_opts.intra_op_num_threads = 1
                 
-    return new_session(model_name)
+    return new_session(model_name, providers=['CPUExecutionProvider'], session_options=sess_opts)
 
 # ═══════════════════════════════════════════════════════
 # 安全改名（修正 Windows 檔案鎖問題）
