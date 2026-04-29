@@ -612,7 +612,14 @@ def get_gemini_recommendation(api_key, selected_item, wardrobe_items, season, oc
         occ_str = "、".join(occasions) if occasions else "不限"
         items_desc = "".join(f"- {it['category']}: {it['name']} ({it['fname']})\n" for it in wardrobe_items)
         
-        prompt = f"妳是專業造型師，請從以下衣櫥清單推薦搭配：{items_desc}。只回傳 JSON。"
+        prompt = (
+            f"妳是深諳「最新韓國明星穿搭風格」的專業造型師。"
+            f"請參考近期韓星的私服與流行趨勢，從以下衣櫥清單中挑選單品，"
+            f"為我搭配一套最帶有韓系氛圍、時髦又有質感的造型。\n"
+            f"當前季節條件：{season} / 預定場合：{occ_str}\n\n"
+            f"衣櫥清單：\n{items_desc}\n\n"
+            f"請注意：妳的回覆必須「只能」包含 JSON 格式的資料，絕對不要輸出任何其他的說明文字。"
+        )
 
         # 🌟 核心修正：使用 gemini-1.5-flash
         response = client.models.generate_content(
