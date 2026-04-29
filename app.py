@@ -621,12 +621,13 @@ def get_gemini_recommendation(api_key, selected_item, wardrobe_items, season, oc
         occ_str = "、".join(occasions) if occasions else "不限"
         items_desc = "".join(f"- {it['category']}: {it['name']} ({it['fname']})\n" for it in wardrobe_items)
         
-        # 🌟 升級版：親民又充滿創意的韓系風格魔法師！
+        # 🌟 升級版：精準看「分類」的韓系風格魔法師！
         prompt = (
             f"妳是一位充滿創意又親切的「韓系風格魔法師」。\n"
             f"請參考近期韓國明星的私服配色與氛圍，用使用者『現有』的衣服，變出一套帶有韓系質感的穿搭！\n"
             f"即使沒有同款單品也完全沒關係，請發揮創意，利用顏色呼應、對比或混搭技巧來營造出類似的氛圍。\n"
             f"請『務必』從以下清單中挑選至少 2 件單品（例如：上衣+下著，或洋裝+鞋子）來完成造型。\n"
+            f"【⚠️ 穿搭常識絕對規則】：請嚴格依照清單上的「分類」來判斷。如果妳挑選了分類為「洋裝」或「連身」的單品，請『絕對不要』再挑選分類為「上衣」、「褲子」或「下著」的衣服，只能搭配鞋子或配件！\n"
             f"當前季節：{season} / 預定場合：{occ_str}\n\n"
             f"衣櫥清單：\n{items_desc}\n\n"
             f"請注意：妳的回覆必須「只能」包含 JSON 格式，絕對不要輸出任何其他文字、也不要用 ```json 包裝。格式範例如下：\n"
@@ -924,12 +925,15 @@ if page == "wardrobe":
                         if fn in meta:
                             b64 = load_img_b64(fn)
                             if b64:
-                                col_ = cats.get(cat_n,{}).get("col","L")
-                                lvl_ = cats.get(cat_n,{}).get("level",2)
-                                e = {"fname":fn, "name":meta.get(fn,{}).get("name",fn[:12]),
+                                # 🌟 防護罩：強制抓取這件衣服「真正的」分類，不讓 AI 亂擺位置！
+                                real_cat = meta[fn].get("category", cat_n)
+                                col_ = cats.get(real_cat, {}).get("col", "L")
+                                lvl_ = cats.get(real_cat, {}).get("level", 2)
+                                
+                                e = {"fname":fn, "name":meta[fn].get("name", fn[:12]),
                                      "reason":rec.get("reason",""), "b64":b64,
-                                     "is_selected":False, "cat":cat_n}
-                                (left_rows if col_=="L" else right_rows)[lvl_].append(e)
+                                     "is_selected":False, "cat":real_cat}
+                                (left_rows if col_=="L" else right_rows)[lvl_].append(e)                        
 
                 # 3. 渲染兩欄畫布 UI
                 # 🌟 核心修正：先檢查是否有衣服可以顯示
