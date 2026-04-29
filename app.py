@@ -918,11 +918,9 @@ if page == "wardrobe":
                         if fn and not fn.lower().endswith(".png"):
                             fn += ".png"
                             
-                        fp = os.path.join(BASE, cat_n, fn)
-                        
-                        # 檢查檔案是否存在，並載入
-                        if os.path.exists(fp):
-                            b64 = load_img_b64(fp)
+                        # 🌟 核心修正：開除舊版會查本機硬碟的笨警衛，直接看雲端名冊 (meta)！
+                        if fn in meta:
+                            b64 = load_img_b64(fn)
                             if b64:
                                 col_ = cats.get(cat_n,{}).get("col","L")
                                 lvl_ = cats.get(cat_n,{}).get("level",2)
