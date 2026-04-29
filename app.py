@@ -621,15 +621,24 @@ def get_gemini_recommendation(api_key, selected_item, wardrobe_items, season, oc
         occ_str = "、".join(occasions) if occasions else "不限"
         items_desc = "".join(f"- {it['category']}: {it['name']} ({it['fname']})\n" for it in wardrobe_items)
         
-        # 🌟 升級版：精準看「分類」的韓系風格魔法師！
+        # 🌟 先判斷使用者有沒有先選衣服，並把它變成 AI 看得懂的文字
+        sel_name = selected_item.get('name', '未指定')
+        sel_cat = selected_item.get('category', '未指定')
+        if sel_cat != "未指定":
+            user_pick_str = f"👉 使用者已經先穿上了這件主角：【{sel_cat}】{sel_name}。\n請『務必』以此為核心，從下方的衣櫥清單中挑選適合的鞋子或配件來補齊這套穿搭。"
+        else:
+            user_pick_str = f"👉 使用者尚未指定主角。\n請從下方的衣櫥清單中挑選出完整的整套穿搭（至少包含上下著，或洋裝+鞋子）。"
+
+        # 🌟 升級版：真正知道妳穿了什麼的韓系風格魔法師！
         prompt = (
             f"妳是一位充滿創意又親切的「韓系風格魔法師」。\n"
-            f"請參考近期韓國明星的私服配色與氛圍，用使用者『現有』的衣服，變出一套帶有韓系質感的穿搭！\n"
-            f"即使沒有同款單品也完全沒關係，請發揮創意，利用顏色呼應、對比或混搭技巧來營造出類似的氛圍。\n"
-            f"請『務必』從以下清單中挑選至少 2 件單品（例如：上衣+下著，或洋裝+鞋子）來完成造型。\n"
-            f"【⚠️ 穿搭常識絕對規則】：請嚴格依照清單上的「分類」來判斷。如果妳挑選了分類為「洋裝」或「連身」的單品，請『絕對不要』再挑選分類為「上衣」、「褲子」或「下著」的衣服，只能搭配鞋子或配件！\n"
+            f"請參考近期韓國明星的私服配色，變出一套帶有韓系質感的穿搭！\n\n"
+            f"{user_pick_str}\n\n"
+            f"【⚠️ 穿搭常識絕對規則】：\n"
+            f"1. 如果上面的主角是「洋裝」或「連身」類單品，妳『絕對不可以』再從清單挑選「上衣」、「褲子」或「下著」，只能挑選鞋子、包包或帽子！\n"
+            f"2. 如果妳自己決定要挑選清單中的「洋裝」，也絕對不要再拿上衣跟下著。\n\n"
             f"當前季節：{season} / 預定場合：{occ_str}\n\n"
-            f"衣櫥清單：\n{items_desc}\n\n"
+            f"可供挑選的衣櫥清單：\n{items_desc}\n\n"
             f"請注意：妳的回覆必須「只能」包含 JSON 格式，絕對不要輸出任何其他文字、也不要用 ```json 包裝。格式範例如下：\n"
             f"{{\n"
             f'  "分類名稱A": {{"fname": "正確的檔名.png", "reason": "妳的韓系配色或風格巧思"}},\n'
@@ -730,8 +739,8 @@ if page == "wardrobe":
         sel = st.session_state.sel_item
 
         # ── 篩選條件（摺疊） ──────────────────────────
-        # 🌟 邏輯：如果 sel 為 None (沒選衣服)，expanded 就為 True (展開)；反之則自動摺疊。
-        with st.expander("🔍 篩選條件（季節／場合／顏色）", expanded=(sel is None)):
+        # 🌟 邏輯：強制永遠保持展開！
+        with st.expander("🔍 篩選條件（季節／場合／顏色）", expanded=True):
             # ⛅ 季節篩選
             st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:0 0 4px">⛅ 季節</div>', unsafe_allow_html=True)
             # 🌟 修正：直接使用 SEASONS，不再額外加上 ["四季皆宜"] 以免重複
