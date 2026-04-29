@@ -965,12 +965,10 @@ if page == "wardrobe":
                                         else:
                                             img_scale = "80%"  # 其他中間比例
 
-                                        with st.popover("", width="stretch"):
-                                            st.markdown(f"**{e['name']}**")
-                                            # ... 原本的內容保持不變 ...
+                                        # 🌟 第一步修改：直接移除原本的 st.popover 區塊，讓畫面變乾淨
                                         
                                         sel_border = f"border:2.5px solid {HOT};" if e['is_selected'] else ""
-                                        # 🌟 在 img 標籤加入 max-height 與 width 限制
+                                        # 顯示衣服貼紙
                                         st.markdown(f"""
                                         <div class="mini-sticker" style="{sel_border}">
                                           <img src="data:image/png;base64,{e['b64']}" 
