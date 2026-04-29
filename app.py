@@ -433,33 +433,40 @@ def get_rembg_session():
     from rembg import new_session
     
     model_name = "u2netp"
+    # 告訴 rembg 模型就在這裡，不要去別的地方亂抓
+    os.environ["U2NET_HOME"] = os.getcwd() 
     model_path = os.path.join(os.getcwd(), f"{model_name}.onnx")
     temp_path = model_path + ".tmp"
     
-    # 🌟 防護網 1：如果檔案存在，但大小不合理 (小於 3MB，正常是 4.7MB)，代表是斷線留下的壞檔，直接刪除！
+    # 🌟 防護網 1：刪除壞檔
     if os.path.exists(model_path) and os.path.getsize(model_path) < 3000000:
         os.remove(model_path)
         
+    # 🌟 防護網 2：強制安全下載
     if not os.path.exists(model_path):
         url = f"https://github.com/danielgatis/rembg/releases/download/v0.0.0/{model_name}.onnx"
         try:
-            # 破解 SSL 阻擋
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
             
-            # 🌟 防護網 2：先下載到「暫存檔」，全部載完才轉正。這樣就算中間斷線，也不會留下壞檔炸毀系統！
+            # 下載到暫存檔
             with urllib.request.urlopen(url, context=ctx) as response, open(temp_path, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
             
-            os.rename(temp_path, model_path)
+            # 檢查下載的檔案有沒有完整 (大約 4.7MB)
+            if os.path.getsize(temp_path) > 3000000:
+                os.rename(temp_path, model_path)
+            else:
+                raise ValueError("下載的檔案太小，疑似網路中斷")
+                
         except Exception as e:
-            print(f"去背模型下載失敗: {e}")
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+            # 🚨 終極煞車：如果下載失敗，直接在畫面上印出錯誤並「停止執行」，絕不讓 rembg 暴衝！
+            st.error(f"🚨 去背模型下載失敗（網路連線異常）。請重新整理網頁再試一次！(錯誤碼: {e})")
+            st.stop() 
                 
-    # 告訴 rembg 直接在這裡找模型
-    os.environ["U2NET_HOME"] = os.getcwd() 
     return new_session(model_name)
 
 # ═══════════════════════════════════════════════════════
