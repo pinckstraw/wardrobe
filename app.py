@@ -1365,7 +1365,11 @@ elif page == "closet":
 
                     img_col, form_col = st.columns([1, 2])
                     with img_col:
-                        try: st.image(Image.open(fpath), use_container_width=True)
+                        try: 
+                            # 🌟 改用雲端讀取函數，把圖片抓下來顯示！
+                            b64 = load_img_b64(fpath)
+                            if b64:
+                                st.markdown(f'<img src="data:image/png;base64,{b64}" style="width:100%; border-radius:14px; box-shadow:0 4px 12px #FE81D430;"/>', unsafe_allow_html=True)
                         except: pass
 
                     with form_col:
