@@ -975,7 +975,7 @@ if page == "wardrobe":
 
                 # 重新推薦按鈕
                 if st.session_state.recs and "_error" not in st.session_state.recs:
-                    if st.button("🔄 重新推薦", key="redo_rec",width="stretch"e):
+                    if st.button("🔄 重新推薦", key="redo_rec", width="stretch"):
                         st.session_state.recs = {}
                         st.rerun()
                         
@@ -999,7 +999,7 @@ if page == "wardrobe":
                   </div>
                 </div>""", unsafe_allow_html=True)
             with cb:
-                if st.button("🔄\n更換", key="change_item",width="stretch"e):
+                if st.button("🔄\n更換", key="change_item", width="stretch"):
                     st.session_state.browse_open = True
                     st.session_state.sel_item    = None
                     st.session_state.recs        = {}
@@ -1116,7 +1116,7 @@ elif page == "upload":
                 orig_img = st.session_state.orig_img
                 
                 # 重新上傳按鈕
-                if st.button("🔄 重新上傳照片", key="reupload",width="stretch"e):
+                if st.button("🔄 重新上傳照片", key="reupload", width="stretch"):
                     for k in ["saved_img_id", "orig_img"]:
                         if k in st.session_state: del st.session_state[k]
                     st.rerun()
@@ -1229,7 +1229,7 @@ elif page == "upload":
                         st.session_state.sticker_bytes = None
                         st.rerun()
                 with col_save:
-                    if st.button("🎀 儲存到衣櫥！", key="save_sticker",width="stretch"e):
+                    if st.button("🎀 儲存到衣櫥！", key="save_sticker", width="stretch"):
                         if not item_name:
                             st.error("請填寫衣物名稱！")
                         elif not sel_color: # 🌟 防呆：確保有選顏色或輸入自訂顏色
@@ -1424,7 +1424,7 @@ elif page == "closet":
 
                     sv_col, ca_col = st.columns(2)
                     with sv_col:
-                        if st.button("💾 儲存修改", key=f"save_edit_{fname}",width="stretch"e):
+                        if st.button("💾 儲存修改", key=f"save_edit_{fname}", width="stretch"):
                             # 更新 metadata
                             meta[fname]["name"]     = e_name
                             meta[fname]["category"] = e_cat
@@ -1487,7 +1487,7 @@ elif page == "closet":
                             st.session_state.editing_item = fname
                             st.rerun()
                     with c4:
-                        if st.button("🗑️", key=f"del_{fname}",width="stretch"e):
+                        if st.button("🗑️", key=f"del_{fname}", width="stretch"):
                             delete_img_from_drive(fname)
                             if fname in meta:
                                 del meta[fname]; save_meta(meta)
@@ -1506,7 +1506,7 @@ elif page == "settings":
     st.markdown('<div class="sec-title">🤖 Gemini AI 設定</div>', unsafe_allow_html=True)
     key_input = st.text_input("Gemini API Key", value=settings.get("gemini_key",""),
                                type="password", placeholder="貼上你的 Gemini API Key...")
-    if st.button("💾 儲存 API Key",width="stretch"e):
+    if st.button("💾 儲存 API Key", width="stretch"):
         settings["gemini_key"] = key_input.strip()
         save_settings(settings)
         st.session_state.toast_msg = "✅ API Key 已儲存！"
@@ -1570,7 +1570,7 @@ elif page == "settings":
                 with e1:
                     rn = st.text_input("", value=cat, key=f"rn_{cat}", label_visibility="collapsed")
                 with e2:
-                    if st.button("💾", key=f"sv_{cat}",width="stretch"e):
+                    if st.button("💾", key=f"sv_{cat}", width="stretch"):
                         rn = rn.strip()
                         if rn and rn != cat:
                             ok, err = safe_rename_folder(os.path.join(BASE, cat), os.path.join(BASE, rn))
@@ -1610,7 +1610,7 @@ elif page == "settings":
                     if st.button("✏️", key=f"ed_{cat}", width="stretch"):
                         st.session_state.editing_cat = cat; st.rerun()
                 with c5:
-                    if st.button("🗑️", key=f"dc_{cat}",width="stretch"e):
+                    if st.button("🗑️", key=f"dc_{cat}", width="stretch"):
                         try: shutil.rmtree(os.path.join(BASE, cat))
                         except: pass
                         del cats[cat]; save_cats(cats); st.rerun()
