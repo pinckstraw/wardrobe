@@ -468,8 +468,11 @@ def get_rembg_session():
     sess_opts = ort.SessionOptions()
     sess_opts.inter_op_num_threads = 1
     sess_opts.intra_op_num_threads = 1
+
+    # 加入 execution_mode 限制，進一步防止 Segfault
+    sess_opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL 
                 
-    return new_session(model_name, providers=['CPUExecutionProvider'], session_options=sess_opts)
+    return new_session("u2netp", providers=['CPUExecutionProvider'], session_options=sess_opts)
 
 # ═══════════════════════════════════════════════════════
 # 安全改名（修正 Windows 檔案鎖問題）
