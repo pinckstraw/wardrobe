@@ -1066,33 +1066,14 @@ if page == "wardrobe":
                         info  = meta.get(fname, {})
                         is_sel= sel == (f_cat, fname)
                         
-                        # 🌟 終極版縮放魔法：同時檢查「分類名稱」與「衣服名稱」，確保長褲跟帽子比例完美！
-                        check_str = f_cat + info.get('name', '') 
-                        if any(k in check_str for k in ["洋裝", "連身", "長褲", "西裝褲", "褲", "大衣", "全身", "長裙"]):
-                            img_scale = "105px"
-                        elif any(k in check_str for k in ["帽", "鞋", "包", "飾", "配件", "襪", "項鍊", "耳環", "貝雷帽"]):
-                            img_scale = "40px"
+                        # 🌟 專屬 8 大分類比例判定：精準對應妳目前的衣櫃設定！
+                        if f_cat in ["洋裝"]:
+                            img_scale = "105px" # 全身型的單品最大
+                        elif f_cat in ["帽子", "包包", "耳環/項鍊", "鞋子"]:
+                            img_scale = "40px"  # 配件跟鞋子最小
                         else:
-                            img_scale = "80px"
-
-                        with col_obj:
-                            b64 = load_img_b64(fp)
-                            st.markdown(f"""
-                            <div class="browse-sticker {'browse-sticker-sel' if is_sel else ''}">
-                              <img src="data:image/png;base64,{b64}" style="max-height:{img_scale}; height:100%; margin:auto 0;"/>
-                              <div class="name">{info.get('name', fname[:14])}</div>
-                            </div>""", unsafe_allow_html=True)
-                            if st.button("✓ 已選" if is_sel else "選這件 🎀",
-                                         key=f"pk_{f_cat}_{fname}", width="stretch"):
-                                if is_sel:
-                                    st.session_state.sel_item    = None
-                                    st.session_state.recs        = {}
-                                    st.session_state.browse_open = True
-                                else:
-                                    st.session_state.sel_item    = (f_cat, fname)
-                                    st.session_state.recs        = {}
-                                    st.session_state.browse_open = False
-                                st.rerun()        
+                            # 剩下的就是「上衣」、「褲子」、「裙子」
+                            img_scale = "70px"  # 上下著使用中等比例
                         
 # ═══════════════════════════════════════════════════════
 # PAGE 2 ── 製作貼紙（簡化版：上傳 → 去背 → 填資訊 → 儲存）
