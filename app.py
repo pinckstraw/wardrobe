@@ -763,11 +763,22 @@ if page == "wardrobe":
             if not isinstance(st.session_state.filter_color, list):
                 st.session_state.filter_color = []
                 
-            fc = st.pills("顏色", used_colors, key="fc",
-                default=[c for c in st.session_state.filter_color if c in used_colors],
-                selection_mode="multi",
-                label_visibility="collapsed")
-            st.session_state.filter_color = fc
+            # 🌟 穩定版優化：使用摺疊區塊 + 多欄位勾選，避免手機版選單過長且防止崩潰
+            with st.expander("🎨 點擊選擇顏色 (可多選)", expanded=False):
+                # 建立 3 欄位讓手機版版面更整齊
+                cols = st.columns(3)
+                new_selected_colors = []
+                
+                for i, color in enumerate(used_colors):
+                    # 根據目前的 session_state 決定是否預先勾選
+                    is_checked = color in st.session_state.filter_color
+                    # 將勾選框分配到不同欄位
+                    if cols[i % 3].checkbox(color, value=is_checked, key=f"filter_{color}"):
+                        new_selected_colors.append(color)
+            
+                # 同步結果到變數與 session_state
+                fc = new_selected_colors
+                st.session_state.filter_color = fc
 
             # 📍 場合篩選
             st.markdown(f'<div style="font-size:10px;color:{MID};font-weight:700;margin:8px 0 4px">📍 場合</div>', unsafe_allow_html=True)
