@@ -1233,7 +1233,6 @@ elif page == "upload":
                 
                 # 如果顏色很多，它會自動換行或是在手機上方便點擊
                 sel_color_choice = st.pills("顏色", all_colors, label_visibility="collapsed", selection_mode="single")
-                ```[cite: 1]
                 
                 # 如果選擇自訂顏色
                 if sel_color_choice == "➕ 自訂新顏色...":
