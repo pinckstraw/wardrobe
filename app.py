@@ -1,3 +1,11 @@
+import os
+# 🌟 終極防爆魔法：在載入任何套件之前，強制所有底層影像引擎只能使用單線程，絕對不准搶記憶體！
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 import streamlit as st
 # from rembg import remove, new_session   # 改成延遲載入
 from PIL import Image
@@ -1047,10 +1055,18 @@ if page == "wardrobe":
             if st.session_state.sel_cat not in display_cats:
                 st.session_state.sel_cat = "✨ 全部衣物"
 
-            st.session_state.sel_cat = st.selectbox(
+            # 🌟 手機救星：把下拉選單變成超好按的「橫向標籤 (Pills)」
+            picked_cat = st.pills(
                 "類別", display_cats,
-                index=display_cats.index(st.session_state.sel_cat),
-                key="cat_picker", label_visibility="collapsed")
+                default=st.session_state.sel_cat,
+                selection_mode="single",
+                key="cat_picker", 
+                label_visibility="collapsed"
+            )
+
+            # 防呆機制：如果使用者不小心點掉標籤（變成 None），就鎖定在原本的選擇
+            if picked_cat is not None:
+                st.session_state.sel_cat = picked_cat
 
             act_cat = st.session_state.sel_cat
 
