@@ -763,9 +763,9 @@ if page == "wardrobe":
             if not isinstance(st.session_state.filter_color, list):
                 st.session_state.filter_color = []
                 
-            fc = st.multiselect("顏色", used_colors, key="fc",
+            fc = st.pills("顏色", used_colors, key="fc",
                 default=[c for c in st.session_state.filter_color if c in used_colors],
-                placeholder="選擇顏色（不選代表全部）",
+                selection_mode="multi",
                 label_visibility="collapsed")
             st.session_state.filter_color = fc
 
