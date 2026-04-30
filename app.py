@@ -1228,11 +1228,9 @@ elif page == "upload":
                 st.markdown(f'<div style="font-size:11px;font-weight:700;color:{MID};margin:10px 0 4px">⛅ 季節</div>', unsafe_allow_html=True)
                 sel_season = st.selectbox("季節", SEASONS, label_visibility="collapsed")
 
-                ```python
                 # 🎨 顏色
                 st.markdown(f'<div style="font-size:11px;font-weight:700;color:{MID};margin:10px 0 4px">🎨 顏色</div>', unsafe_allow_html=True)
-
-                # 🌟 修改點：將原本的 selectbox 換成 pills 模式，手機版會像標籤一樣好點選
+                
                 # 如果顏色很多，它會自動換行或是在手機上方便點擊
                 sel_color_choice = st.pills("顏色", all_colors, label_visibility="collapsed", selection_mode="single")
                 ```[cite: 1]
